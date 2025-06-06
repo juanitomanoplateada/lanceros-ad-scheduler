@@ -1,69 +1,68 @@
-# Programación LS94.1FM
+# Lanceros Stereo Cuñas Scheduler
 
-Este es un sistema de programación para la emisora **Lanceros Stereo 94.1 FM**, desarrollado en Python con una arquitectura **MVC** (Modelo-Vista-Controlador). Permite gestionar, visualizar y exportar la programación de cuñas radiales asignadas a bloques de 30 minutos entre las 5:30AM y las 8:30PM.
-
----
-
-## 🎯 Funcionalidades principales
-
-- ✅ Registro de cuñas por horario
-- ✅ Visualización superpuesta de la programación próxima (HUD)
-- ✅ Exportación de programación (`.txt` / `.csv`)
-- ✅ Eliminación de cuñas por número
-- ✅ Actualización automática del horario actual (cada 30s)
-- ✅ Guardado automático y respaldo diario
+Aplicación de escritorio para la emisora **Lanceros Stereo 94.1 FM** que permite programar y visualizar cuñas radiales en franjas horarias de 30 minutos. Incluye una visualización HUD flotante y un microservidor Flask que expone en tiempo real la canción actual en reproducción.
 
 ---
 
-## 🗂 Estructura del proyecto
+## 🎯 Características principales
 
-```
-.
-├── controller.py          # Lógica del controlador (intermediario Vista ↔ Modelo)
-├── model.py               # Capa de datos (horarios y almacenamiento)
-├── view.py                # Interfaz gráfica con Tkinter
-├── main.py                # Punto de entrada principal
-├── data/                  # Carpeta de datos y respaldos
-│   └── ads_data.json
-├── dist/                  # Archivos compilados (por PyInstaller)
-├── build/                 # Archivos de construcción
-├── LS94_1.ico             # Ícono para ejecutable
-└── ProgramaciónLS94.1FM.exe  # Ejecutable generado
+- Asignación visual y sencilla de cuñas numeradas (0–99) a franjas horarias entre **5:30AM y 8:30PM**.
+- Edición de franjas individuales con casillas de verificación (checkboxes).
+- HUD flotante sobrepuesto con los próximos 3 bloques de programación.
+- Auto-guardado cada 60 segundos.
+- Exportación de la programación a archivo `.txt` o `.csv`.
+- Backup automático diario.
+- Microservicio Flask para emitir la canción actual desde los logs de OtsAV.
+
+---
+
+## 🚀 Cómo ejecutar
+
+1. Instalar dependencias:
+```bash
+pip install flask
 ```
 
----
-
-## ▶ Cómo ejecutar
-
-**Desde código fuente:**
-
+2. Ejecutar el programa principal:
 ```bash
 python main.py
 ```
 
-**Como ejecutable (Windows):**
-
-Ejecuta el archivo `ProgramaciónLS94.1FM.exe` directamente.
+Esto abrirá la interfaz gráfica y un servidor Flask en segundo plano accesible en: [http://localhost:8080/current_song.txt](http://localhost:8080/current_song.txt)
 
 ---
 
-## 🛠 Requisitos
+## 📁 Estructura del proyecto
 
-- Python 3.10+
-- Paquetes estándar (`tkinter`, `json`, `os`, `datetime`)
-- Recomendado: crear entorno virtual
-
----
-
-## 🖥 Generar el ejecutable
-
-```bash
-pyinstaller --onefile --noconsole --icon=LS94_1.ico --name "ProgramaciónLS94.1FM" main.py
+```
+├── main.py                 # Punto de entrada de la app
+├── model.py               # Lógica de persistencia y manejo de horarios
+├── view.py                # Interfaz gráfica (Tkinter)
+├── controller.py          # Lógica de interacción entre vista y modelo
+├── song_service.py        # Servidor Flask para mostrar canción actual
+├── data/
+│   ├── ads_data.json      # Datos persistentes de cuñas
+│   └── backups/           # Respaldos diarios automáticos
 ```
 
 ---
 
-## 📦 Autores y licencia
+## 📡 Servicio Flask
 
-Desarrollado por **@juanitomanoplateada**  
-Distribución cerrada para uso interno de **Lanceros Stereo 94.1 FM**.
+El archivo `song_service.py` accede al log generado por OtsAV (`C:/OtsLabs/Logs/YYYY-MM-DD-playlog.txt`), parsea la última entrada y entrega el nombre del artista y canción actual.
+
+Ideal para integraciones con OBS, paneles web, entre otros.
+
+---
+
+## ✅ Para compilar a .exe
+
+```bash
+pyinstaller --onefile --icon=icon.ico main.py
+```
+
+---
+
+## 📌 Autor
+
+Desarrollado por el equipo de **Lanceros Stereo 94.1 FM** con ❤️ y Python.
