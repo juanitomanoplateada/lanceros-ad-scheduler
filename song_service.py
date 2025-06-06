@@ -15,7 +15,7 @@ def get_last_song():
         return None
 
     try:
-        with open(log_file, "r", encoding="utf-8") as f:
+        with open(log_file, "r", encoding="latin-1") as f:
             lines = f.readlines()
     except Exception as e:
         print(f"[ERROR] Failed to read log file: {e}")
