@@ -1,68 +1,124 @@
-# Lanceros Stereo Cuñas Scheduler
+# Programador de Cuñas - Lanceros Stereo 94.1 FM
 
-Aplicación de escritorio para la emisora **Lanceros Stereo 94.1 FM** que permite programar y visualizar cuñas radiales en franjas horarias de 30 minutos. Incluye una visualización HUD flotante y un microservidor Flask que expone en tiempo real la canción actual en reproducción.
+## Descripción general
 
----
+El **Programador de Cuñas de Lanceros Stereo** es una aplicación de escritorio diseñada para gestionar la programación de cuñas radiales (anuncios) en los bloques de programación diarios de la emisora **Lanceros Stereo 94.1 FM**.
 
-## 🎯 Características principales
-
-- Asignación visual y sencilla de cuñas numeradas (0–99) a franjas horarias entre **5:30AM y 8:30PM**.
-- Edición de franjas individuales con casillas de verificación (checkboxes).
-- HUD flotante sobrepuesto con los próximos 3 bloques de programación.
-- Auto-guardado cada 60 segundos.
-- Exportación de la programación a archivo `.txt` o `.csv`.
-- Backup automático diario.
-- Microservicio Flask para emitir la canción actual desde los logs de OtsAV.
+La aplicación combina una interfaz de escritorio desarrollada con **Python y Tkinter**, junto con un microservicio en **Flask** que permite integraciones externas en tiempo real, como con software de transmisión.
 
 ---
 
-## 🚀 Cómo ejecutar
+## Visión general del sistema
 
-1. Instalar dependencias:
-```bash
-pip install flask
+La aplicación opera entre las **5:30 a.m. y las 8:30 p.m.**, dividiendo la jornada en bloques de **30 minutos**. En cada bloque, los operadores pueden asignar cuñas numeradas del **0 al 99** mediante una interfaz visual de casillas.
+
+---
+
+## Arquitectura general del sistema
+
+### 🗂️ Capa de datos
+- `ads_data.json`: Guarda la programación en formato JSON.
+- `data/backups/`: Contiene copias de seguridad diarias.
+- `C:/OtsLabs/Logs/`: Lectura de logs para detectar canciones en reproducción (OtsAV).
+
+### 🔄 Servicios en segundo plano
+- **Auto-guardado**: Guarda automáticamente cada 60 segundos.
+- **PeriodicBackupService**: Copia el archivo `.oml` cada 30 minutos.
+
+### 🧠 Núcleo de la aplicación
+
+| Componente           | Descripción                                |
+|----------------------|--------------------------------------------|
+| `main.py`            | Punto de entrada de la aplicación          |
+| `model.py`           | Lógica de datos y exportación              |
+| `view.py`            | Interfaz gráfica con Tkinter               |
+| `controller.py`      | Coordinador de lógica y eventos            |
+| `song_service.py`    | Servidor Flask para integración externa    |
+
+---
+
+## Componentes principales de la aplicación
+
+### 🔧 Patrón MVC
+
+- **Modelo**:
+  - Maneja `ads_data.json`
+  - Valida programación
+  - Exporta a `.txt` y `.csv`
+
+- **Vista**:
+  - Interfaz gráfica con Tkinter
+  - Cuadro de casillas para cuñas
+  - HUD flotante con los siguientes bloques
+
+- **Controlador**:
+  - Captura eventos del usuario
+  - Coordina vista y modelo
+
+### 🌐 Microservicio Flask
+
+- Ruta: `http://localhost:8080/current_song.txt`
+- Lee los logs de OtsAV
+- Proporciona metadatos de la canción actual
+
+### 🛡️ Copias de seguridad
+
+- Guardado automático cada 60 segundos
+- Respaldo periódico del archivo `.oml`
+- Copias diarias en `data/backups/`
+
+---
+
+## Funcionalidades clave
+
+| Funcionalidad             | Implementación / Referencia                 |
+|---------------------------|---------------------------------------------|
+| Asignación visual de cuñas| Cuadro de casillas – `view.py`              |
+| Persistencia de datos     | JSON + auto-guardado – `model.py`           |
+| HUD en tiempo real        | Ventana flotante – `view.py`                |
+| Exportación               | `.txt` y `.csv` – `model.py`                |
+| Integración externa       | API HTTP con Flask – `song_service.py`      |
+| Copias de seguridad       | Automáticas y periódicas – `main.py`, `model.py` |
+
+---
+
+## Modelo de concurrencia
+
+La aplicación usa hilos para mantener la interacción fluida:
+
+- **Hilo principal**: Ejecuta `main.py` y lanza los servicios
+- **Hilo de GUI**: `root.mainloop()` (interfaz gráfica)
+- **Hilo Flask**: Servidor de canciones actuales
+- **Hilo de backups**: Copias del archivo `.oml` cada 30 minutos
+
+---
+
+## Ecosistema de integración
+
+La aplicación se integra con el ecosistema de transmisión:
+
+- **OtsAV DJ**: Lectura de logs desde `C:/OtsLabs/Logs/`
+- **OBS Studio**: Consume datos actuales vía API para superposiciones
+- **Paneles web**: Acceden a la canción actual desde el endpoint Flask
+- **Archivos exportados**: En `.txt` y `.csv` para otros sistemas
+
+### API principal:
+
+```
+GET http://localhost:8080/current_song.txt
 ```
 
-2. Ejecutar el programa principal:
-```bash
-python main.py
-```
+---
 
-Esto abrirá la interfaz gráfica y un servidor Flask en segundo plano accesible en: [http://localhost:8080/current_song.txt](http://localhost:8080/current_song.txt)
+## Archivos fuente
+
+- `main.py`
+- `model.py`
+- `view.py`
+- `controller.py`
+- `song_service.py`
+- `README.md`
 
 ---
 
-## 📁 Estructura del proyecto
-
-```
-├── main.py                 # Punto de entrada de la app
-├── model.py               # Lógica de persistencia y manejo de horarios
-├── view.py                # Interfaz gráfica (Tkinter)
-├── controller.py          # Lógica de interacción entre vista y modelo
-├── song_service.py        # Servidor Flask para mostrar canción actual
-├── data/
-│   ├── ads_data.json      # Datos persistentes de cuñas
-│   └── backups/           # Respaldos diarios automáticos
-```
-
----
-
-## 📡 Servicio Flask
-
-El archivo `song_service.py` accede al log generado por OtsAV (`C:/OtsLabs/Logs/YYYY-MM-DD-playlog.txt`), parsea la última entrada y entrega el nombre del artista y canción actual.
-
-Ideal para integraciones con OBS, paneles web, entre otros.
-
----
-
-## ✅ Para compilar a .exe
-
-```bash
-pyinstaller --onefile --icon=icon.ico main.py
-```
-
----
-
-## 📌 Autor
-
-Desarrollado por el equipo de **Lanceros Stereo 94.1 FM** con ❤️ y Python.
+© Lanceros Stereo 94.1 FM · Todos los derechos reservados.
